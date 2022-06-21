@@ -9,10 +9,10 @@
 		<relativePath/> <!-- lookup parent from repository -->
 	</parent>
 	<groupId>com.example</groupId>
-	<artifactId>pim</artifactId>
+	<artifactId>command</artifactId>
 	<version>0.0.1-SNAPSHOT</version>
-	<name>pim</name>
-	<description>poc pim</description>
+	<name>command</name>
+	<description>poc command</description>
 	<properties>
 		<java.version>11</java.version>
 	</properties>
