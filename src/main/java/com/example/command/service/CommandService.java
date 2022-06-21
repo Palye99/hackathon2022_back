@@ -28,6 +28,10 @@ public class CommandService {
             // Vérif
             if(myFile.createNewFile()) {
                 System.out.println("File created: " + myObj.getName());
+                myWriter.write("Le Terraform ici %s","ip ici");
+                myWriter.close();
+                System.out.println("Successfully wrote to the file.");
+
             } else {
                 System.out.println("File already exists.");
                 myWriter.write("Le Terraform ici %s","ip ici");
