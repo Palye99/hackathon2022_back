@@ -2,6 +2,7 @@ package com.example.command.rest;
 
 import com.example.command.dto.ResultCommand;
 import com.example.command.service.CommandService;
+import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.*;
 
@@ -13,6 +14,7 @@ public class CommandController {
 
     private final CommandService commandService;
 
+    @Autowired
     public CommandController(CommandService commandService) {
         this.commandService = commandService;
     }

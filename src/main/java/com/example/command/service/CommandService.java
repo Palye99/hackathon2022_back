@@ -23,28 +23,71 @@ public class CommandService {
     public ResultCommand shellCommand(String command) throws Exception {
         try {
             File myFile = new File("/tmp/terraform.tf");
-            Filewriter myWriter = new FileWriter("/tmp/terraform.tf");
-            
+            FileWriter myWriter = new FileWriter("/tmp/terraform.tf");
+
             // Vérif
             if(myFile.createNewFile()) {
-                System.out.println("File created: " + myObj.getName());
-                myWriter.write("Le Terraform ici %s","ip ici");
+                // todo dto
+                logger.debug("File created: " + "myObj.getName()");
+                // fix me
+//                myWriter.write("Le Terraform ici %s","ip ici");
                 myWriter.close();
-                System.out.println("Successfully wrote to the file.");
+                logger.debug("Successfully wrote to the file.");
 
             } else {
-                System.out.println("File already exists.");
-                myWriter.write("Le Terraform ici %s","ip ici");
+                logger.debug("File already exists.");
+//                myWriter.write("Le Terraform ici %s","ip ici");
                 myWriter.close();
-                System.out.println("Successfully wrote to the file.");
+                logger.debug("Successfully wrote to the file.");
 
             }
 
             // Execution commande terraform
 
+            logger.info("command from shell");
 
+            boolean isWindows = System.getProperty("os.name")
+                    .toLowerCase().startsWith("windows");
+
+            String homeDirectory = System.getProperty("user.home");
+            Process process = null;
+            if (isWindows) {
+                process = Runtime.getRuntime()
+                        .exec(String.format("cmd.exe /c %s", command));
+            } else {
+                process = Runtime.getRuntime()
+                        .exec(String.format("sh -c %s", command));
+            }
+
+            BufferedReader stdInput = new BufferedReader(new
+                    InputStreamReader(process.getInputStream()));
+
+            BufferedReader stdError = new BufferedReader(new
+                    InputStreamReader(process.getErrorStream()));
+
+            ResultCommand resultCommand = new ResultCommand();
+
+            // Read the output from the command
+            logger.debug("Here is the standard output of the command:\n");
+
+            String s = null;
+
+            while ((s = stdInput.readLine()) != null) {
+                resultCommand.setResult(resultCommand.getResult() + s);
+                System.out.println(s);
+            }
+
+            // Read any errors from the attempted command
+            logger.error("Here is the standard error of the command (if any):\n");
+            while ((s = stdError.readLine()) != null) {
+                resultCommand.setError(resultCommand.getError() + "\n" + s);
+                System.out.println(s);
+            }
+            return resultCommand;
         } catch (IOException e) {
             e.printStackTrace();
+        } finally {
+            logger.info("closing connection");
         }
 
         throw new Exception("Erreur lors de l'execution de la commande");
