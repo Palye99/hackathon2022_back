@@ -8,7 +8,7 @@ import org.springframework.web.bind.annotation.*;
 import java.util.Optional;
 
 @RestController
-@RequestMapping("api/docker")
+@RequestMapping("api/command")
 public class CommandController {
 
     private final CommandService commandService;
@@ -18,7 +18,7 @@ public class CommandController {
     }
 
     @CrossOrigin()
-    @RequestMapping(value = "/command", method = RequestMethod.POST)
+    @PostMapping
     public ResponseEntity<ResultCommand> shellCommand(@RequestBody String command) throws Exception {
         return Optional
                 .ofNullable(commandService.shellCommand(command))
