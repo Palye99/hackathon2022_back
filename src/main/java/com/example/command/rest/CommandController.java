@@ -1,6 +1,7 @@
 package com.example.command.rest;
 
 import com.example.command.dto.ResultCommand;
+import com.example.command.dto.TerraformDTO;
 import com.example.command.service.CommandService;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.http.ResponseEntity;
@@ -20,12 +21,13 @@ public class CommandController {
         this.commandService = commandService;
     }
 
+    @Deprecated
     @CrossOrigin()
     @GetMapping
-    public ResponseEntity<ResultCommand> execTerraform() throws Exception {
+    public ResponseEntity<ResultCommand> terraformDeprecated() throws Exception {
         String command = "tree";
         return Optional
-                .ofNullable(commandService.execTerraform(command))
+                .ofNullable(commandService.terraformDeprecated(command))
                 .map(list -> ResponseEntity.ok().body(list))          //200 OK
                 .orElseGet(() -> ResponseEntity.notFound().build());
     }
@@ -36,6 +38,15 @@ public class CommandController {
         command = "tree";
        return Optional
                 .ofNullable(commandService.shellCommand(command))
+                .map(list -> ResponseEntity.ok().body(list))          //200 OK
+                .orElseGet(() -> ResponseEntity.notFound().build());
+    }
+
+    @CrossOrigin
+    @PostMapping(path = "/terraform")
+    public ResponseEntity<ResultCommand> execTerraform(@RequestBody TerraformDTO terraformDTO) throws Exception {
+       return Optional
+                .ofNullable(commandService.execTerraform(terraformDTO))
                 .map(list -> ResponseEntity.ok().body(list))          //200 OK
                 .orElseGet(() -> ResponseEntity.notFound().build());
     }
