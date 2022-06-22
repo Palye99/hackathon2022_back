@@ -103,18 +103,18 @@ public class Value {
                                     "tags = {"+
                                         "Name = %s"+
                                     "}"+
-                                    
+
                                     "provisioner \"remote-exec\" {"+
                                         "inline = [\"echo CONNECTED\",]"+
                                     "}"+
-                                    
+
                                     "connection {"+
                                         "host	= \"${aws_instance.dev_ec2.public_ip}\""+
                                         "type	= \"ssh\""+
                                         "user	= \"root\""+
                                         "private_key = \"${file(var.ans_pri_key)}\""+
-                                       "}"
-                                    
+                                       "}"+
+
                                     "provisioner \"local-exec\" {"+
                                                 "working_dir = \"/etc/ansible/\""+
                                                 "command = \"echo ${aws_instance.dev_ec2.public_ip} >> hosts\""+
@@ -125,14 +125,14 @@ public class Value {
                                             "working_dir = \"/etc/ansible/\""+
                                             "command = \"ansible-playbook -u root --private-key ${var.ans_pri_key} lamp_pb.yml -i ${aws_instance.dev_ec2.public_ip},\""+
 
-                                    "}"+	
+                                    "}"+
                                 "}"+
 
                                 "output \"devpubip\" {"+
                                     "value = aws_instance.dev_ec2.public_ip"+
                                 "}";
 
-    public static String variableStr = 
+    public static String variableStr =
                                 "variable \"ans_pub_key\" {"+
                                     "default = \"/home/ec2-user/.ssh/anskey.pub\""+
                                 "}"+
