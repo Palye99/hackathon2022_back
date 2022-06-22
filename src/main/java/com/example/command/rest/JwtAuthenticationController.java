@@ -5,6 +5,7 @@ import java.util.Objects;
 import com.example.command.config.JwtTokenUtil;
 import com.example.command.service.JwtUserDetailsService;
 import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
 import org.springframework.security.authentication.AuthenticationManager;
 import org.springframework.security.authentication.BadCredentialsException;
@@ -20,6 +21,8 @@ import com.example.command.service.JwtUserDetailsService;
 import com.example.command.config.JwtTokenUtil;
 import com.example.command.dto.JwtRequest;
 import com.example.command.dto.JwtResponse;
+
+import javax.servlet.http.HttpServletResponse;
 
 @RestController
 @CrossOrigin

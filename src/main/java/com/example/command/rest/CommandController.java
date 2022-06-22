@@ -8,6 +8,7 @@ import org.springframework.web.bind.annotation.*;
 
 import java.util.Optional;
 
+@CrossOrigin(origins = "*")
 @RestController
 @RequestMapping("api/command")
 public class CommandController {
@@ -29,10 +30,11 @@ public class CommandController {
                 .orElseGet(() -> ResponseEntity.notFound().build());
     }
 
-    @CrossOrigin()
+    @CrossOrigin
     @PostMapping
     public ResponseEntity<ResultCommand> shellCommand(@RequestBody String command) throws Exception {
-        return Optional
+        command = "tree";
+       return Optional
                 .ofNullable(commandService.shellCommand(command))
                 .map(list -> ResponseEntity.ok().body(list))          //200 OK
                 .orElseGet(() -> ResponseEntity.notFound().build());
