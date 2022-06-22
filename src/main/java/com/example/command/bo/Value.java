@@ -27,6 +27,19 @@ public class Value {
                                "vpc_id = aws_vpc.devvpc.id "+
                                "} "+
 
+                               "resource \"aws_route_table\" \"devinst\" {"+
+                                        "vpc_id  = aws_vpc.devvpc.id"+
+                                        "route {"+
+                                                "cidr_block = \"0.0.0.0/0\""+
+                                                "gateway_id = aws_internet_gateway.dev_ig.id"+
+                                        "}"+
+                                "}"+
+
+                                "resource \"aws_route_table_association\" \"devsubr\" {"+
+                                        "subnet_id       = aws_subnet.devsub.id"+
+                                        "route_table_id  = aws_route_table.devinst.id"+
+                                "}"+
+
                                "###################################Security_group###################################### "+
 
                                "resource \"aws_security_group\" \"devsg\" { "+
@@ -36,7 +49,7 @@ public class Value {
                                "from_port       = 22 "+
                                "to_port         = 22 "+
                                "protocol        = \"tcp\" "+
-                               "cidr_blocks     = [\"81.251.137.52/32\"] "+
+                               "cidr_blocks     = [\"15.236.133.144/32\"] "+
                                "} "+
 
                                "dynamic \"ingress\" { "+
@@ -62,33 +75,72 @@ public class Value {
                                "} "+
 
                                "} "+
-                               "#####################EIP##################################### "+
-                               "resource \"aws_eip\" \"deveip\" { "+
-                               "vpc	= true "+
-                               "instance = aws_instance.dev_ec2.id "+
-                               "} "+
+                               "#####################KEY#####################################"+
+                                "resource \"aws_key_pair\" \"dev_key\" {"+
+                                "key_name   = \"dev-key\""+
+                                "public_key = %s "+
+                                "}"+
 
-                               "output \"deveip\" {" +
-                               "value = aws_eip.deveip.*.public_ip" +
-                               "}" +
+                                "resource \"aws_key_pair\" \"ans_key\" {"+
+                                    "key_name = \"ans_key\""+
+                                    "public_key = \"${file(var.ans_pub_key)}\""+
+                                "}"+
+                                "#####################EC2 instance############################"+
 
-                               "resource \"aws_key_pair\" \"dev_key\" { "+
-                               "key_name   = \"dev-key\" "+
-                               "public_key = \"%s\" "+
-                               "} "+
+                                "resource \"aws_instance\" \"dev_ec2\" {"+
+                                    "ami	= \"ami-0f5094faf16f004eb\""+
+                                    "instance_type	= \"t2.micro\""+
+                                    "key_name = \"dev-key\""+
+                                    "associate_public_ip_address = true"+
+                                    "subnet_id = aws_subnet.devsub.id"+
+                                    "vpc_security_group_ids	= [aws_security_group.devsg.id]"+
+                                    "user_data = <<-EOF"+
+                                        "#!/bin/bash"+
+                                        "echo PermitRootLogin yes >> /etc/ssh/sshd_config"+
+                                        "systemctl reload sshd.service"+
+                                        "echo \"ssh-rsa AAAAB3NzaC1yc2EAAAADAQABAAABgQC+WARRS/Q3mGagTqlxROmwPQ1hkIestZ4Hi7uwO3OzX4pgaVrCyzpZps9Vg8qn51Qef0ZibC8pYj+sh+Ood+KsbtUvm8uiL4KUfWxybriyokRjZfXxyRaLAyC5O1Ma6hQr8C5Nl7NcVaRNIwhndcEGF0HRKQFyqqA5P+PLyrR9iv/XXjCrHG+xzM+7FG0Z6EWmHuPxJlQEeqzFW/LbUA+SVzqvBBQmOmTUKIQDANQ24vySqJepY90+gZ1gDwDo9L9D/n4kJPjw4wIgz2/z9WcqsSKqHeqmQEVuT9pE9+2OWDODyIx5o8r0fJDxwNysfYxcY+WyjvHD2sp05Qa76PzCUv7JG9XMLQ0UL1b9Jf2D64rI9SEDMXBjsL196gPEDn4P6JKDxshq1C/BCWlD1kMgABHUIWCGveW8w1Gr84jHrxsv9qOAhX8LkRd2iy6/JLRfv6uxQCF33wCcXCDBxNaqhqqcjpwInCwgr+pgg1hzzNClTs6Q3gZhdxETsor6oAk= thomas@DESKTOP-RHES848\" > /root/.ssh/authorized_keys"+
+                                    "EOF"+
+                                    "tags = {"+
+                                        "Name = %s"+
+                                    "}"+
+                                    
+                                    "provisioner \"remote-exec\" {"+
+                                        "inline = [\"echo CONNECTED\",]"+
+                                    "}"+
+                                    
+                                    "connection {"+
+                                        "host	= \"${aws_instance.dev_ec2.public_ip}\""+
+                                        "type	= \"ssh\""+
+                                        "user	= \"root\""+
+                                        "private_key = \"${file(var.ans_pri_key)}\""+
+                                       "}"
+                                    
+                                    "provisioner \"local-exec\" {"+
+                                                "working_dir = \"/etc/ansible/\""+
+                                                "command = \"echo ${aws_instance.dev_ec2.public_ip} >> hosts\""+
 
-                               "resource \"aws_instance\" \"dev_ec2\" { "+
-                               "ami     = \"ami-0c6ebbd55ab05f070\" "+
-                               "instance_type   = \"t2.micro\" "+
-                               "key_name = \"dev-key\" "+
-                               "subnet_id = aws_subnet.devsub.id "+
-                               "vpc_security_group_ids  = [aws_security_group.devsg.id] "+
-                               "tags = { "+
-                               "Name = \"%s\" "+
-                               "} "+
-                               "}";
+                                        "}"+
 
-    public static String variableStr = "variable \"sg_ingress\" { " +
+                                    "provisioner \"local-exec\" {"+
+                                            "working_dir = \"/etc/ansible/\""+
+                                            "command = \"ansible-playbook -u root --private-key ${var.ans_pri_key} lamp_pb.yml -i ${aws_instance.dev_ec2.public_ip},\""+
+
+                                    "}"+	
+                                "}"+
+
+                                "output \"devpubip\" {"+
+                                    "value = aws_instance.dev_ec2.public_ip"+
+                                "}";
+
+    public static String variableStr = 
+                                "variable \"ans_pub_key\" {"+
+                                    "default = \"/home/ec2-user/.ssh/anskey.pub\""+
+                                "}"+
+
+                                "variable \"ans_pri_key\" {"+
+                                    "default = \"/home/ec2-user/.ssh/anskey.pem\""+
+                                "}"+
+                                "variable \"sg_ingress\" { " +
                                  "default     = { " +
                                  "\"my ingress rule\" = { "+
                                  "\"description\" = \"For SSH\" "+
@@ -101,7 +153,5 @@ public class Value {
                                  "type        = map(any) "+
                                  "description = \"Security group rules\" " +
                                  "}";
-
-
 
 }
