@@ -85,6 +85,11 @@ public class CommandService {
                             instance = aws_instance.dev_ec2.id
                             vpc	= true
                         }
+
+                        output "deveip" {
+                            value = aws_eip.deveip.*.public_ip
+                        }
+
                         resource "aws_key_pair" "dev_key" {
                         key_name   = "dev-key"
                         public_key = "%s"
@@ -164,12 +169,6 @@ public class CommandService {
                         .exec(String.format("cd /tmp/ || terraform apply  -auto-approve"));
             }
 
-
-
-
-
-
-            
             Process process = null;
 
 
