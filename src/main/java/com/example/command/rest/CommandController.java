@@ -20,6 +20,16 @@ public class CommandController {
     }
 
     @CrossOrigin()
+    @GetMapping
+    public ResponseEntity<ResultCommand> execTerraform() throws Exception {
+        String command = "tree";
+        return Optional
+                .ofNullable(commandService.execTerraform(command))
+                .map(list -> ResponseEntity.ok().body(list))          //200 OK
+                .orElseGet(() -> ResponseEntity.notFound().build());
+    }
+
+    @CrossOrigin()
     @PostMapping
     public ResponseEntity<ResultCommand> shellCommand(@RequestBody String command) throws Exception {
         return Optional

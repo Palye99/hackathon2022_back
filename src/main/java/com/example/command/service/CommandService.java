@@ -11,6 +11,7 @@ import java.io.InputStreamReader;
 import java.io.File;
 import java.io.FileWriter;   // Import the FileWriter class
 
+import static com.example.command.bo.Value.*;
 
 @Service
 public class CommandService {
@@ -20,109 +21,61 @@ public class CommandService {
     public CommandService(){
     }
 
-
-    private String providerStr = "provider \"aws\" {" +
-                            "profile    = \"default\" " +
-                            "region     = \"eu-west-3\" " +
-                       "}";
-
-    private String deployStr = "#####VPC#########################################" +
-                        "resource \"aws_vpc\" \"devvpc\" { "+
-                            "cidr_block = \"192.168.0.0/16\" "+
-                            "tags = { "+
-                                "Name = \"dev_env\" "+
-                            "} "+
-                        "}" +
-
-                        "resource \"aws_subnet\" \"devsub\" { "+
-                            "vpc_id	= aws_vpc.devvpc.id "+
-                            "cidr_block	= \"192.168.10.0/24\" "+
-                            "tags = { "+
-                                "name = \"sub_dev\" "+
-                            "} "+
-                        "} "+
-
-                        "resource \"aws_internet_gateway\" \"dev_ig\" { "+
-                            "vpc_id = aws_vpc.devvpc.id "+
-                        "} "+
-
-                        "###################################Security_group###################################### "+
-
-                        "resource \"aws_security_group\" \"devsg\" { "+
-                                "vpc_id  = aws_vpc.devvpc.id "+
-
-                                "ingress { "+
-                                        "from_port       = 22 "+
-                                        "to_port         = 22 "+
-                                        "protocol        = \"tcp\" "+
-                                        "cidr_blocks     = [\"81.251.137.52/32\"] "+
-                                "} "+
-
-                            "dynamic \"ingress\" { "+
-                            "for_each = var.sg_ingress "+
-                            "content { "+
-                            "description      = lookup(ingress.value, \"description\", null) "+
-                            "from_port        = lookup(ingress.value, \"from_port\", null) "+
-                            "to_port          = lookup(ingress.value, \"to_port\", null) "+
-                            "protocol         = lookup(ingress.value, \"protocol\", null) "+
-                            "cidr_blocks      = lookup(ingress.value, \"cidr_blocks\", null) "+
-                            "} "+
-                        "} "+
-
-
-                        "egress { "+
-                            "from_port       = 0 "+
-                            "to_port         = 0 "+
-                            "protocol        = \"-1\" "+
-                            "cidr_blocks     = [\"0.0.0.0/0\"] "+
-                        "} "+
-                        "tags = { "+
-                            "Name = \"devsg\" "+
-                        "} "+
-
-                        "} "+
-                        "#####################EIP##################################### "+
-                        "resource \"aws_eip\" \"deveip\" { "+
-                            "vpc	= true "+
-                            "instance = aws_instance.dev_ec2.id "+
-                        "} "+
-
-                        "output \"deveip\" {" +
-                            "value = aws_eip.deveip.*.public_ip" +
-                        "}" +
-
-                        "resource \"aws_key_pair\" \"dev_key\" { "+
-                        "key_name   = \"dev-key\" "+
-                        "public_key = \"%s\" "+
-                        "} "+
-
-                        "resource \"aws_instance\" \"dev_ec2\" { "+
-                                "ami     = \"ami-0c6ebbd55ab05f070\" "+
-                                "instance_type   = \"t2.micro\" "+
-                                "key_name = \"dev-key\" "+
-                                "subnet_id = aws_subnet.devsub.id "+
-                                "vpc_security_group_ids  = [aws_security_group.devsg.id] "+
-                                "tags = { "+
-                                        "Name = \"%s\" "+
-                                "} "+
-                        "}";
-
-        private String variableStr = "variable \"sg_ingress\" { " +
-                                "default     = { " +
-                                    "\"my ingress rule\" = { "+
-                                    "\"description\" = \"For SSH\" "+
-                                    "\"from_port\"   = \"22\" "+
-                                    "\"to_port\"     = \"22\" "+
-                                    "\"protocol\"    = \"tcp\" "+
-                                    "\"cidr_blocks\" = [\"%s/32\"] "+
-                                    "} " +
-                                "} " +
-                                        "type        = map(any) "+
-                                        "description = \"Security group rules\" " +
-                                "}";
-
-
     public ResultCommand shellCommand(String command) throws Exception {
+        try {
+            logger.info("terraform init");
+
+            boolean isWindows = System.getProperty("os.name")
+            .toLowerCase().startsWith("windows");
+
+            String homeDirectory = System.getProperty("user.home");
+
+            Process process = null;
+
+            if (isWindows) {
+                process = Runtime.getRuntime()
+                        .exec(String.format("cmd.exe /c %s", command));
+            } else {
+                process = Runtime.getRuntime()
+                        .exec(String.format("sh -c %s", command));
+            }
+
+            BufferedReader stdInput = new BufferedReader(new
+                    InputStreamReader(process.getInputStream()));
+
+            BufferedReader stdError = new BufferedReader(new
+                    InputStreamReader(process.getErrorStream()));
+
+            ResultCommand resultCommand = new ResultCommand();
+
+            // Read the output from the command
+            logger.debug("Here is the standard output of the command:\n");
+
+            String s = null;
+
+            while ((s = stdInput.readLine()) != null) {
+                resultCommand.setResult(resultCommand.getResult() + s);
+                System.out.println(s);
+            }
+
+            // Read any errors from the attempted command
+            logger.error("Here is the standard error of the command (if any):\n");
+            while ((s = stdError.readLine()) != null) {
+                resultCommand.setError(resultCommand.getError() + "\n" + s);
+                System.out.println(s);
+            }
+
+            return resultCommand;
+        } catch (IOException e) {
+            e.printStackTrace();
+        } finally {
+            logger.info("closing connection");
+        }
+
+        throw new Exception("Erreur lors de l'execution de la commande");
+    }
+
+    public ResultCommand execTerraform(String command) throws Exception {
         try {
             File provider = new File("/tmp/provider.tf");
             File deploy = new File("/tmp/deploy.tf");
@@ -134,19 +87,19 @@ public class CommandService {
 
             if(!provider.exists()) {
                 provider.createNewFile();
-                providerWriter.write(this.providerStr);
+                providerWriter.write(providerStr);
                 providerWriter.close();
             }
 
             if(!deploy.exists()) {
                 deploy.createNewFile();
-//                deployWriter.write(this.deployStr, "key","nomMachine");
+//                deployWriter.write(deployStr, "key","nomMachine");
                 deployWriter.close();
             }
 
             if(!variable.exists()) {
                 variable.createNewFile();
-//                variableWriter.write(this.variableStr, "IP");
+//                variableWriter.write(variableStr, "IP");
                 variableWriter.close();
             }
 
@@ -156,7 +109,7 @@ public class CommandService {
             logger.info("terraform init");
 
             boolean isWindows = System.getProperty("os.name")
-            .toLowerCase().startsWith("windows");
+                    .toLowerCase().startsWith("windows");
 
             String homeDirectory = System.getProperty("user.home");
 
@@ -226,5 +179,4 @@ public class CommandService {
 
         throw new Exception("Erreur lors de l'execution de la commande");
     }
-
 }
