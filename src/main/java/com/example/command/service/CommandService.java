@@ -118,10 +118,10 @@ public class CommandService {
 
             if (isWindows) {
                 process = Runtime.getRuntime()
-                        .exec("cd /tmp/ || terraform init -force-copy && cd /tmp/ || terraform apply -auto-approve");
+                        .exec("cmd.exe /c cd /tmp/ || terraform init -force-copy && cd /tmp/ || terraform apply -auto-approve");
             } else {
                 process = Runtime.getRuntime()
-                        .exec("cd /tmp/ || terraform init -force-copy && cd /tmp/ || terraform apply  -auto-approve");
+                        .exec("sh -c cd /tmp/ || terraform init -force-copy && cd /tmp/ || terraform apply  -auto-approve");
             }
 
             BufferedReader stdInput = new BufferedReader(new
