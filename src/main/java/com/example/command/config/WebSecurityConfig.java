@@ -87,6 +87,9 @@ public class WebSecurityConfig extends WebSecurityConfigurerAdapter {
         corsConfiguration.setAllowedMethods(Arrays.asList("GET","POST", "OPTIONS"));
         corsConfiguration.addAllowedHeader("Access-Control-Allow-Origin");
         corsConfiguration.addAllowedOrigin("*");
+        corsConfiguration.addAllowedOrigin("https://myinstantcode.ddns.net");
+        corsConfiguration.addAllowedOrigin("http://localhost:4200");
+        corsConfiguration.addAllowedOrigin("*");
 
         final UrlBasedCorsConfigurationSource source = new UrlBasedCorsConfigurationSource();
         source.registerCorsConfiguration("/**", corsConfiguration);
