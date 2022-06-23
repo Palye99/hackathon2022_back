@@ -112,16 +112,24 @@ public class CommandService {
             boolean isWindows = System.getProperty("os.name")
                     .toLowerCase().startsWith("windows");
 
+            logger.info("Is windows ? " + isWindows);
+
             String homeDirectory = System.getProperty("user.home");
+
+            logger.info("path homeDirectory = " + homeDirectory);
 
             Process process = null;
 
             if (isWindows) {
+                logger.info("Start processing windows");
                 process = Runtime.getRuntime()
                         .exec("cmd.exe /c cd /tmp/ || terraform init -force-copy && cd /tmp/ || terraform apply -auto-approve");
+                logger.info("End processing windows");
             } else {
+                logger.info("Start processing shell");
                 process = Runtime.getRuntime()
                         .exec("sh -c cd /tmp/ || terraform init -force-copy && cd /tmp/ || terraform apply  -auto-approve");
+                logger.info("End processing shell");
             }
 
             BufferedReader stdInput = new BufferedReader(new
@@ -133,7 +141,7 @@ public class CommandService {
             ResultCommand resultCommand = new ResultCommand();
 
             // Read the output from the command
-            logger.debug("Here is the standard output of the command:\n");
+            logger.info("Here is the standard output of the command:\n");
 
             String s = null;
 
@@ -143,7 +151,7 @@ public class CommandService {
             }
 
             // Read any errors from the attempted command
-            logger.debug("Here is the standard error of the command (if any):\n");
+            logger.info("Here is the standard error of the command (if any):\n");
             while ((s = stdError.readLine()) != null) {
                 resultCommand.setError(resultCommand.getError() + "\n" + s);
                 logger.error(s);
