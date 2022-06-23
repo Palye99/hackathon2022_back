@@ -21,21 +21,10 @@ public class CommandController {
         this.commandService = commandService;
     }
 
-    @Deprecated
-    @CrossOrigin()
-    @GetMapping
-    public ResponseEntity<ResultCommand> terraformDeprecated() throws Exception {
-        String command = "tree";
-        return Optional
-                .ofNullable(commandService.terraformDeprecated(command))
-                .map(list -> ResponseEntity.ok().body(list))          //200 OK
-                .orElseGet(() -> ResponseEntity.notFound().build());
-    }
-
     @CrossOrigin
     @PostMapping
     public ResponseEntity<ResultCommand> shellCommand(@RequestBody String command) throws Exception {
-        command = "tree";
+       command = "tree";
        return Optional
                 .ofNullable(commandService.shellCommand(command))
                 .map(list -> ResponseEntity.ok().body(list))          //200 OK
