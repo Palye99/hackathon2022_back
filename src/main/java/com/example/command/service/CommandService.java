@@ -6,11 +6,7 @@ import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.springframework.stereotype.Service;
 
-import java.io.BufferedReader;
-import java.io.IOException;
-import java.io.InputStreamReader;
-import java.io.File;
-import java.io.FileWriter;   // Import the FileWriter class
+import java.io.*;
 
 import static com.example.command.bo.Value.*;
 
@@ -24,7 +20,7 @@ public class CommandService {
 
     public ResultCommand shellCommand(String command) throws Exception {
         try {
-            logger.info("terraform init");
+            logger.info("Commande init");
 
             boolean isWindows = System.getProperty("os.name")
             .toLowerCase().startsWith("windows");
@@ -38,7 +34,7 @@ public class CommandService {
                         .exec(String.format("cmd.exe /c %s", command));
             } else {
                 process = Runtime.getRuntime()
-                        .exec(String.format("/bin/sh -c %s", command));
+                        .exec(String.format("/bin/bash -c %s", command));
             }
 
             BufferedReader stdInput = new BufferedReader(new
@@ -124,11 +120,15 @@ public class CommandService {
                 logger.info("Start processing windows");
                 process = Runtime.getRuntime()
                         .exec("cmd.exe /c cd /tmp/ || terraform init -force-copy && cd /tmp/ || terraform apply -auto-approve");
+                logger.info("cd /tmp/ || terraform init -force-copy && cd /tmp/ || terraform apply -auto-approve");
                 logger.info("End processing windows");
             } else {
                 logger.info("Start processing shell");
+                String[] commands = { "/bin/bash", "-c", "cd /tmp/ | terraform init -force-copy | terraform apply -auto-approve" };
+
                 process = Runtime.getRuntime()
-                        .exec("/bin/sh -c cd /tmp/ || terraform init -force-copy && cd /tmp/ || terraform apply  -auto-approve");
+                        .exec(commands);
+                logger.info("cd /tmp/ | terraform init -force-copy | terraform apply -auto-approve");
                 logger.info("End processing shell");
             }
 
@@ -147,7 +147,7 @@ public class CommandService {
 
             while ((s = stdInput.readLine()) != null) {
                 resultCommand.setResult(resultCommand.getResult() + s);
-                logger.debug(s);
+                logger.info(s);
             }
 
             // Read any errors from the attempted command
